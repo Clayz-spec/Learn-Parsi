@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parsi — Learn Farsi</title>
+<style>
+  :root {
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --purple-mid: #AFA9EC;
+    --purple-dark: #3C3489;
+    --teal: #1D9E75;
+    --teal-light: #E1F5EE;
+    --teal-dark: #085041;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-mid: #E24B4A;
+    --gray-bg: #F7F6F3;
+    --gray-border: #E2E0DA;
+    --gray-muted: #888780;
+    --text: #1a1a1a;
+    --text-secondary: #5a5a5a;
+    --text-tertiary: #999;
+    --bg: #ffffff;
+    --surface: #F7F6F3;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--gray-bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Setup overlay ── */
+  #setup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .setup-card {
+    background: var(--bg); border-radius: var(--radius-lg);
+    padding: 28px 32px; width: 480px; max-width: 94vw;
+    border: 1px solid var(--gray-border);
+  }
+  .setup-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .setup-logo-icon { width: 36px; height: 36px; background: var(--purple); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 700; }
+  .setup-logo-text { font-size: 20px; font-weight: 600; }
+  .setup-logo-sub { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+  .setup-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .setup-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+  .key-group { margin-bottom: 14px; }
+  .key-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .key-label .badge { font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--teal-light); color: var(--teal-dark); text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .key-label .badge-opt { background: var(--amber-light); color: var(--amber); }
+  .key-input { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-border); border-radius: var(--radius); font-size: 13px; color: var(--text); background: var(--bg); outline: none; font-family: monospace; }
+  .key-input:focus { border-color: var(--purple); }
+  .key-hint { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+  .key-hint a { color: var(--purple); text-decoration: none; }
+  .setup-row { display: flex; gap: 10px; }
+  .setup-row .key-group { flex: 1; }
+  .btn-start { width: 100%; padding: 11px; background: var(--purple); color: white; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; transition: background .15s; }
+  .btn-start:hover { background: var(--purple-dark); }
+  .skip-link { text-align: center; margin-top: 10px; font-size: 12px; color: var(--text-tertiary); }
+  .skip-link a { color: var(--purple); cursor: pointer; text-decoration: none; }
+
+  /* ── App shell ── */
+  .app { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; min-width: 220px; background: var(--bg);
+    border-right: 1px solid var(--gray-border);
+    display: flex; flex-direction: column;
+  }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid var(--gray-border); display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 30px; height: 30px; background: var(--purple); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+  .logo-name { font-size: 16px; font-weight: 700; }
+  .logo-sub { font-size: 11px; color: var(--text-tertiary); }
+  .nav { padding: 10px 8px; flex: 1; }
+  .nav-section-label { font-size: 10px; color: var(--text-tertiary); padding: 0 8px 5px; letter-spacing: .06em; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text-secondary); margin-bottom: 1px; transition: background .12s, color .12s; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--purple-light); color: var(--purple); font-weight: 600; }
+  .nav-badge { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--teal); color: white; font-weight: 600; }
+  .sidebar-foot { padding: 12px; border-top: 1px solid var(--gray-border); }
+  .progress-label { font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .pbar { height: 5px; background: var(--gray-border); border-radius: 99px; overflow: hidden; }
+  .pbar-fill { height: 100%; background: var(--purple); border-radius: 99px; }
+  .streak { font-size: 11px; color: var(--text-tertiary); margin-top: 5px; }
+
+  /* ── Main area ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+  /* ── Sections ── */
+  .section { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .section.active { display: flex; }
+
+  /* ── Tutor chat ── */
+  .chat-topbar { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--gray-border); background: var(--bg); flex-shrink: 0; padding: 0 6px; }
+  .chat-tab { padding: 11px 14px; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; white-space: nowrap; }
+  .chat-tab:hover { color: var(--text); }
+  .chat-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 600; }
+  .chat-sub { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .chat-sub.active { display: flex; }
+  .msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; gap: 9px; align-items: flex-start; }
+  .msg.user { flex-direction: row-reverse; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; font-weight: 600; }
+  .avatar.tutor { background: var(--purple-light); color: var(--purple); }
+  .avatar.user { background: var(--surface); color: var(--text-secondary); }
+  .bubble { max-width: 76%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.55; }
+  .msg.tutor .bubble { background: var(--surface); border: 1px solid var(--gray-border); border-top-left-radius: 4px; color: var(--text); }
+  .msg.user .bubble { background: var(--purple); color: white; border-top-right-radius: 4px; }
+  .fa-line { font-size: 20px; direction: rtl; display: block; color: var(--purple); margin-bottom: 4px; line-height: 1.6; }
+  .msg.user .fa-line { color: #d4cfff; }
+  .tr-line { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; font-style: italic; }
+  .msg.user .tr-line { color: rgba(255,255,255,.5); }
+  .grammar-pill { display: inline-flex; align-items: flex-start; gap: 5px; margin-top: 7px; padding: 6px 9px; background: var(--purple-light); border-radius: 6px; font-size: 11.5px; color: var(--purple-dark); line-height: 1.45; }
+  .typing-row { display: flex; gap: 9px; align-items: center; }
+  .dots-wrap { padding: 10px 14px; background: var(--surface); border: 1px solid var(--gray-border); border-radius: 16px; border-top-left-radius: 4px; display: flex; gap: 4px; align-items: center; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); animation: dp 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes dp { 0%,100%{ opacity:.3; transform:scale(1); } 50%{ opacity:1; transform:scale(1.3); } }
+  .err-toast { margin: 0 14px 8px; padding: 8px 12px; background: var(--red-light); border: 1px solid #f7c1c1; border-radius: var(--radius); font-size: 12px; color: var(--red); display: none; align-items: center; gap: 6px; }
+  .input-zone { padding: 10px 14px 14px; border-top: 1px solid var(--gray-border); background: var(--bg); flex-shrink: 0; }
+  .chips { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--gray-border); cursor: pointer; color: var(--text-secondary); background: var(--bg); transition: all .12s; white-space: nowrap; }
+  .chip:hover { background: var(--purple-light); color: var(--purple); border-color: var(--purple-mid); }
+  .input-row { display: flex; gap: 7px; align-items: center; }
+  .chat-input { flex: 1; padding: 9px 14px; border: 1px solid var(--gray-border); border-radius: 20px; font-size: 13px; color: var(--text); background: var(--surface); outline: none; font-family: inherit; }
+  .chat-input:focus { border-color: var(--purple); background: var(--bg); }
+  .chat-input::placeholder { color: var(--text-tertiary); }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--gray-border); background: var(--bg); color: var(--text-secondary); transition: all .12s; flex-shrink: 0; }
+  .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn:hover { background: var(--surface); color: var(--text); }
+  .icon-btn.send { background: var(--purple); color: white; border-color: var(--purple); }
+  .icon-btn.send:hover { background: var(--purple-dark); }
+  .icon-btn.mic { color: var(--red); border-color: #f7c1c1; background: var(--red-light); }
+  .icon-btn.mic.on { background: var(--red-mid); color: white; border-color: var(--red-mid); animation: dp 1s infinite; }
+  .listening-indicator { font-size: 11px; color: var(--red); text-align: center; margin-bottom: 4px; display: none; }
+  .listening-indicator.show { display: block; }
+
+  /* ── Grammar notes ── */
+  .grammar-notes-list { padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .grammar-note-card { background: var(--bg); border: 1px solid var(--gray-border); border-left: 3px solid var(--purple); border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 13px; font-size: 13px; color: var(--text); line-height: 1.5; }
+  .grammar-note-empty { font-size: 13px; color: var(--text-tertiary); padding: 16px; }
+
+  /* ── Scrollable panel ── */
+  .panel-scroll { flex: 1; overflow-y: auto; padding: 18px; }
+  .panel-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+  .panel-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+
+  /* ── Lessons ── */
+  .lesson-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .lesson-card { background: var(--bg); border: 1px solid var(--gray-border); border-radius: var(--radius-lg); padding: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .lesson-card:hover:not(.locked) { border-color: var(--purple); }
+  .lesson-card.current { border: 2px solid var(--purple); }
+  .lesson-card.done { border-color: var(--teal); }
+  .lesson-card.locked { opacity: .55; cursor: default; }
+  .lc-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 99px; margin-bottom: 8px; font-weight: 600; }
+  .badge-beg { background: var(--teal-light); color: var(--teal-dark); }
+  .badge-int { background: var(--amber-light); color: var(--amber); }
+  .badge-adv { background: var(--red-light); color: var(--red); }
+  .lc-fa { font-size: 24px; direction: rtl; text-align: right; color: var(--purple); margin-bottom: 6px; min-height: 32px; }
+  .lc-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .lc-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .lc-meta { font-size: 11px; color: var(--text-tertiary); }
+
+  /* ── Lesson practice view ── */
+  .lesson-practice { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .lesson-practice.active { display: flex; }
+  .lesson-topbar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--gray-border); background: var(--bg); flex-shrink: 0; }
+  .back-btn { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; padding: 5px 8px; border-radius: var(--radius); border: 1px solid var(--gray-border); transition: all .12s; }
+  .back-btn:hover { background: var(--surface); color: var(--text); }
+  .back-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .lesson-header-text { flex: 1; }
+  .lesson-header-title { font-size: 14px; font-weight: 700; }
+  .lesson-header-prog { font-size: 12px; color: var(--text-secondary); }
+  .lesson-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .word-card { background: var(--bg); border: 1px solid var(--gray-border); border-radius: var(--radius-lg); padding: 24px; text-align: center; margin-bottom: 14px; }
+  .word-fa { font-size: 52px; color: var(--purple); direction: rtl; display: block; margin-bottom: 8px; line-height: 1.3; }
+  .word-tr { font-size: 18px; color: var(--text-secondary); margin-bottom: 4px; }
+  .word-en { font-size: 14px; color: var(--text-tertiary); }
+  .word-actions { display: flex; gap: 9px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); font-size: 13px; cursor: pointer; border: 1px solid var(--gray-border); background: var(--bg); color: var(--text); transition: all .12s; font-family: inherit; }
+  .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .btn:hover { background: var(--surface); }
+  .btn-primary { background: var(--purple); color: white; border-color: var(--purple); }
+  .btn-primary:hover { background: var(--purple-dark); border-color: var(--purple-dark); }
+  .btn-rec { background: var(--red-light); color: var(--red); border-color: #f7c1c1; }
+  .btn-rec.on { background: var(--red-mid); color: white; border-color: var(--red-mid); animation: dp 1s infinite; }
+  .lesson-fb { padding: 10px 13px; border-radius: var(--radius); font-size: 13px; margin-top: 10px; display: none; }
+  .vocab-section-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .vocab-list { display: flex; flex-direction: column; gap: 7px; }
+  .vocab-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; background: var(--bg); border: 1px solid var(--gray-border); border-radius: var(--radius); }
+  .vocab-en { font-size: 13px; font-weight: 500; }
+  .vocab-tr { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+  .vocab-fa { font-size: 20px; color: var(--purple); direction: rtl; }
+
+  /* ── Pronunciation ── */
+  .pron-card { background: var(--bg); border: 1px solid var(--gray-border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 12px; }
+  .mode-switcher { display: flex; gap: 2px; background: var(--surface); border-radius: var(--radius); padding: 3px; border: 1px solid var(--gray-border); width: fit-content; margin: 0 auto 18px; }
+  .mode-btn { padding: 5px 13px; border-radius: 7px; font-size: 12px; cursor: pointer; color: var(--text-secondary); transition: all .12s; border: none; background: none; font-family: inherit; }
+  .mode-btn.active { background: var(--purple); color: white; font-weight: 600; }
+  .pron-word-big { font-size: 52px; color: var(--purple); direction: rtl; text-align: center; display: block; margin-bottom: 6px; line-height: 1.3; }
+  .pron-translit { text-align: center; font-size: 18px; color: var(--text-secondary); margin-bottom: 3px; }
+  .pron-meaning { text-align: center; font-size: 13px; color: var(--text-tertiary); margin-bottom: 16px; }
+  .pron-controls { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; }
+  .score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-top: 16px; }
+  .score-cell { background: var(--surface); border-radius: var(--radius); padding: 12px; text-align: center; }
+  .score-num { font-size: 26px; font-weight: 700; }
+  .score-cell-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .phonemes-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+  .ph { padding: 5px 11px; border-radius: var(--radius); font-size: 14px; border: 1px solid var(--gray-border); background: var(--surface); }
+  .ph .ph-sc { font-size: 10px; opacity: .65; display: block; text-align: center; }
+  .ph.g { background: var(--teal-light); color: var(--teal-dark); border-color: #5DCAA5; }
+  .ph.w { background: var(--amber-light); color: var(--amber); border-color: #EF9F27; }
+  .ph.e { background: var(--red-light); color: var(--red); border-color: #F09595; }
+  .tip-box { background: var(--purple-light); border-radius: var(--radius); padding: 10px 13px; font-size: 13px; color: var(--purple-dark); margin-top: 12px; line-height: 1.5; }
+  .azure-note { background: var(--amber-light); border: 1px solid #EF9F27; border-radius: var(--radius); padding: 10px 13px; font-size: 12px; color: var(--amber); margin-bottom: 14px; display: none; }
+  .azure-note.show { display: block; }
+  .pron-result { display: none; }
+  .pron-result.show { display: block; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .sidebar { width: 56px; min-width: 56px; }
+    .sidebar-logo .logo-name, .sidebar-logo .logo-sub, .nav-item span, .nav-section-label, .nav-badge, .sidebar-foot .progress-label, .sidebar-foot .streak { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .lesson-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Setup overlay -->
+<div id="setup-overlay">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="setup-logo-icon">پ</div>
+      <div>
+        <div class="setup-logo-text">Parsi</div>
+        <div class="setup-logo-sub">Farsi language learning</div>
+      </div>
+    </div>
+    <div class="setup-title">Add your API keys to get started</div>
+    <div class="setup-desc">Your keys are stored only in your browser (localStorage) and never sent anywhere except the respective APIs.</div>
+
+    <div class="key-group">
+      <div class="key-label">
+        Anthropic API Key
+        <span class="badge">Required — AI Tutor</span>
+      </div>
+      <input class="key-input" id="k-anthropic" type="password" placeholder="sk-ant-..." autocomplete="off" />
+      <div class="key-hint">Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+    </div>
+
+    <div class="setup-row">
+      <div class="key-group">
+        <div class="key-label">
+          Azure Speech Key
+          <span class="badge badge-opt">Optional — Pronunciation</span>
+        </div>
+        <input class="key-input" id="k-azure" type="password" placeholder="32-char key..." autocomplete="off" />
+        <div class="key-hint">Free 5hr/mo at <a href="https://portal.azure.com" target="_blank">portal.azure.com</a></div>
+      </div>
+      <div class="key-group">
+        <div class="key-label">Azure Region</div>
+        <input class="key-input" id="k-region" type="text" placeholder="eastus" autocomplete="off" />
+        <div class="key-hint">e.g. eastus, westeurope</div>
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startApp()">Start learning</button>
+    <div class="skip-link"><a onclick="skipSetup()">Skip — I'll add keys later in Settings</a></div>
+  </div>
+</div>
+
+<!-- App shell -->
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">پ</div>
+      <div>
+        <div class="logo-name">Parsi</div>
+        <div class="logo-sub">فارسی</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-section-label">Learn</div>
+      <div class="nav-item active" id="nav-tutor" onclick="showSection('tutor')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>AI Tutor</span>
+        <span class="nav-badge">Live</span>
+      </div>
+      <div class="nav-item" id="nav-lessons" onclick="showSection('lessons')">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Lessons</span>
+      </div>
+      <div class="nav-item" id="nav-pronunc" onclick="showSection('pronunc')">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span>Pronunciation</span>
+      </div>
+      <div class="nav-section-label" style="margin-top:10px">Review</div>
+      <div class="nav-item" id="nav-vocab" onclick="showSection('vocab')">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>Vocabulary</span>
+      </div>
+      <div class="nav-item" id="nav-settings" onclick="showSection('settings')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="progress-label"><span>Week 2</span><span>62%</span></div>
+      <div class="pbar"><div class="pbar-fill" style="width:62%"></div></div>
+      <div class="streak">🔥 5-day streak</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- TUTOR section -->
+    <div class="section active" id="sect-tutor">
+      <div class="chat-topbar">
+        <div class="chat-tab active" id="ctab-0" onclick="setChatTab(0)">Chat</div>
+        <div class="chat-tab" id="ctab-1" onclick="setChatTab(1)">Grammar notes</div>
+      </div>
+      <!-- Chat messages -->
+      <div class="chat-sub active" id="csub-0">
+        <div class="msgs" id="msgs"></div>
+        <div class="err-toast" id="err-toast">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="err-text"></span>
+        </div>
+        <div class="input-zone">
+          <div class="listening-indicator" id="listen-indicator">🎙 Listening for Farsi...</div>
+          <div class="chips">
+            <div class="chip" onclick="quickSend('Teach me a common Farsi greeting with example')">Greet me in Farsi</div>
+            <div class="chip" onclick="quickSend('How do I introduce myself in Farsi?')">Introduce myself</div>
+            <div class="chip" onclick="quickSend('Correct this Farsi sentence and explain why: man xub hastam')">Correct my Farsi</div>
+            <div class="chip" onclick="quickSend('Give me a Farsi word of the day with an example sentence and cultural context')">Word of the day</div>
+            <div class="chip" onclick="quickSend('Teach me how to count to 10 in Farsi')">Count to 10</div>
+          </div>
+          <div class="input-row">
+            <div class="icon-btn mic" id="chat-mic" onclick="toggleMic()" title="Speak in Farsi">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <input class="chat-input" id="chat-input" placeholder="Type in English or فارسی..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){sendMsg();event.preventDefault()}" />
+            <div class="icon-btn send" onclick="sendMsg()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Grammar notes -->
+      <div class="chat-sub" id="csub-1">
+        <div class="grammar-notes-list" id="grammar-list">
+          <div class="grammar-note-empty">Grammar notes will appear here as Nazanin explains concepts during your conversation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSONS section -->
+    <div class="section" id="sect-lessons">
+      <!-- Curriculum view -->
+      <div id="lessons-curriculum" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <div class="panel-scroll">
+          <div class="panel-title">Your learning path</div>
+          <div class="panel-sub">Structured Farsi curriculum — alphabet to fluency</div>
+          <div class="lesson-grid">
+            <div class="lesson-card done">
+              <div class="lc-badge badge-beg">✓ Beginner</div>
+              <div class="lc-fa">الفبا</div>
+              <div class="lc-title">The Persian Alphabet</div>
+              <div class="lc-sub">32 letters, right-to-left script</div>
+              <div class="lc-meta">15 min · +50 xp · Completed</div>
+            </div>
+            <div class="lesson-card current" onclick="openLesson()">
+              <div class="lc-badge badge-beg">Beginner · In progress</div>
+              <div class="lc-fa">سلام</div>
+              <div class="lc-title">Greetings & Introductions</div>
+              <div class="lc-sub">Hello, goodbye, how are you</div>
+              <div class="lc-meta">20 min · +60 xp · Continue →</div>
+            </div>
+            <div class="lesson-card locked">
+              <div class="lc-badge badge-beg">Beginner · Locked</div>
+              <div class="lc-fa" style="color:var(--text-tertiary)">🔒</div>
+              <div class="lc-title">Numbers 1–100</div>
+              <div class="lc-sub">Counting, dates, prices</div>
+              <div class="lc-meta">25 min · +70 xp</div>
+            </div>
+            <div class="lesson-card locked">
+              <div class="lc-badge badge-beg">Beginner · Locked</div>
+              <div class="lc-fa" style="color:var(--text-tertiary)">🔒</div>
+              <div class="lc-title">Family & Relationships</div>
+              <div class="lc-sub">Mother, father, siblings</div>
+              <div class="lc-meta">20 min · +60 xp</div>
+            </div>
+            <div class="lesson-card locked">
+              <div class="lc-badge badge-int">Intermediate · Locked</div>
+              <div class="lc-fa" style="color:var(--text-tertiary)">🔒</div>
+              <div class="lc-title">Present Tense Verbs</div>
+              <div class="lc-sub">Core verb conjugations</div>
+              <div class="lc-meta">30 min · +80 xp</div>
+            </div>
+            <div class="lesson-card locked">
+              <div class="lc-badge badge-adv">Advanced · Locked</div>
+              <div class="lc-fa" style="color:var(--text-tertiary)">🔒</div>
+              <div class="lc-title">Formal vs Informal Speech</div>
+              <div class="lc-sub">Register, politeness levels</div>
+              <div class="lc-meta">40 min · +100 xp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Lesson practice view -->
+      <div class="lesson-practice" id="lesson-practice">
+        <div class="lesson-topbar">
+          <div class="back-btn" onclick="closeLesson()">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </div>
+          <div class="lesson-header-text">
+            <div class="lesson-header-title">Greetings & Introductions</div>
+            <div class="lesson-header-prog">Word <span id="lw-num">1</span> of 6</div>
+          </div>
+        </div>
+        <div class="lesson-body">
+          <div class="word-card">
+            <span class="word-fa" id="lw-fa">سلام</span>
+            <div class="word-tr" id="lw-tr">salâm</div>
+            <div class="word-en" id="lw-en">Hello / Hi</div>
+            <div class="word-actions">
+              <button class="btn" onclick="lessonListen()">
+                <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Listen
+              </button>
+              <button class="btn btn-rec" id="lrec-btn" onclick="toggleLRec()">
+                <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                Pronounce
+              </button>
+              <button class="btn btn-primary" onclick="lessonNext()">
+                Next
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+            <div class="lesson-fb" id="lesson-fb"></div>
+          </div>
+          <div class="vocab-section-title">Lesson vocabulary</div>
+          <div class="vocab-list" id="lesson-vocab-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRONUNCIATION section -->
+    <div class="section" id="sect-pronunc">
+      <div class="panel-scroll">
+        <div class="panel-title">Pronunciation drill</div>
+        <div class="panel-sub">Record yourself and get phoneme-by-phoneme feedback</div>
+        <div class="azure-note" id="azure-note">
+          Azure Speech key not configured — using simulated scores. Add your key in Settings for real acoustic analysis.
+        </div>
+        <div class="pron-card">
+          <div class="mode-switcher">
+            <button class="mode-btn active" onclick="setPronMode(this,'greetings')">Greetings</button>
+            <button class="mode-btn" onclick="setPronMode(this,'difficult')">Hard sounds</button>
+            <button class="mode-btn" onclick="setPronMode(this,'vowels')">Long vowels</button>
+          </div>
+          <span class="pron-word-big" id="pron-fa">خوش‌آمدید</span>
+          <div class="pron-translit" id="pron-tr">xosh-âmadid</div>
+          <div class="pron-meaning" id="pron-en">Welcome (formal)</div>
+          <div class="pron-controls">
+            <button class="btn" onclick="pronListen()">
+              <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              Hear native
+            </button>
+            <button class="btn btn-rec" id="pron-rec-btn" onclick="togglePronRec()">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              Record
+            </button>
+            <button class="btn" onclick="pronNext()">
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Next word
+            </button>
+          </div>
+          <div class="pron-result" id="pron-result">
+            <div class="score-grid">
+              <div class="score-cell"><div class="score-num" id="pr-ov" style="color:var(--purple)">—</div><div class="score-cell-lbl">Overall</div></div>
+              <div class="score-cell"><div class="score-num" id="pr-ac" style="color:var(--teal)">—</div><div class="score-cell-lbl">Accent</div></div>
+              <div class="score-cell"><div class="score-num" id="pr-ry" style="color:var(--amber)">—</div><div class="score-cell-lbl">Rhythm</div></div>
+            </div>
+            <div class="phonemes-row" id="pron-phonemes"></div>
+            <div class="tip-box" id="pron-tip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOCABULARY section -->
+    <div class="section" id="sect-vocab">
+      <div class="panel-scroll">
+        <div class="panel-title">Vocabulary bank</div>
+        <div class="panel-sub">All words you've encountered so far</div>
+        <div class="vocab-list" id="all-vocab"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS section -->
+    <div class="section" id="sect-settings">
+      <div class="panel-scroll">
+        <div class="panel-title">Settings</div>
+        <div class="panel-sub">Manage your API keys — stored only in your browser</div>
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:500px">
+          <div class="key-group">
+            <div class="key-label" style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Anthropic API Key</div>
+            <input class="key-input" id="s-anthropic" type="password" placeholder="sk-ant-..." />
+            <div class="key-hint" style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Powers the AI tutor. Get one at <a href="https://console.anthropic.com" target="_blank" style="color:var(--purple)">console.anthropic.com</a></div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div class="key-group" style="flex:1">
+              <div class="key-label" style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Azure Speech Key</div>
+              <input class="key-input" id="s-azure" type="password" placeholder="32-char key..." />
+              <div class="key-hint" style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Free 5hr/mo at <a href="https://portal.azure.com" target="_blank" style="color:var(--purple)">portal.azure.com</a></div>
+            </div>
+            <div class="key-group" style="flex:1">
+              <div class="key-label" style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Azure Region</div>
+              <input class="key-input" id="s-region" type="text" placeholder="eastus" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()" style="width:fit-content;padding:9px 20px">Save keys</button>
+          <div id="settings-saved" style="font-size:13px;color:var(--teal);display:none">Keys saved to browser storage.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let ANTHROPIC_KEY = localStorage.getItem('parsi_anthropic') || '';
+let AZURE_KEY     = localStorage.getItem('parsi_azure') || '';
+let AZURE_REGION  = localStorage.getItem('parsi_region') || 'eastus';
+let chatHistory   = [];
+let micActive     = false;
+let recognition   = null;
+let pronRec       = false;
+let lrecActive    = false;
+let pronMode      = 'greetings';
+let pronIdx       = 0;
+let lwIdx         = 0;
+let mediaRecorder = null;
+let audioChunks   = [];
+let grammarNotes  = [];
+
+// ── Vocab & lesson data ────────────────────────────────────────────
+const VOCAB = [
+  {fa:'سلام',tr:'salâm',en:'Hello'},
+  {fa:'خداحافظ',tr:'khodâhâfez',en:'Goodbye'},
+  {fa:'ممنون',tr:'mamnun',en:'Thank you'},
+  {fa:'بله',tr:'bale',en:'Yes'},
+  {fa:'نه',tr:'na',en:'No'},
+  {fa:'خوش‌آمدید',tr:'xosh-âmadid',en:'Welcome'},
+  {fa:'لطفاً',tr:'lotfan',en:'Please'},
+  {fa:'ببخشید',tr:'bebaxshid',en:'Excuse me'},
+  {fa:'چطوری؟',tr:'chetori?',en:'How are you? (informal)'},
+  {fa:'خوبم',tr:'xubam',en:"I'm fine"},
+];
+const LESSON_WORDS = [
+  {fa:'سلام',tr:'salâm',en:'Hello / Hi'},
+  {fa:'خداحافظ',tr:'khodâhâfez',en:'Goodbye'},
+  {fa:'اسم من',tr:'esm-e man',en:'My name is...'},
+  {fa:'خوشحالم',tr:'xoshhâlam',en:'Nice to meet you'},
+  {fa:'چطوری؟',tr:'chetori?',en:'How are you?'},
+  {fa:'خوبم، ممنون',tr:'xubam, mamnun',en:"I'm fine, thank you"},
+];
+const PRON_SETS = {
+  greetings:[
+    {fa:'خوش‌آمدید',tr:'xosh-âmadid',en:'Welcome (formal)',phs:['خو','ش','آم','دید'],sc:[90,85,72,94]},
+    {fa:'ممنون',tr:'mamnun',en:'Thank you',phs:['مم','نون'],sc:[88,79]},
+    {fa:'ببخشید',tr:'bebaxshid',en:'Excuse me',phs:['ب','بخ','شید'],sc:[88,70,95]},
+    {fa:'سلام',tr:'salâm',en:'Hello',phs:['سـ','لا','م'],sc:[92,88,95]},
+  ],
+  difficult:[
+    {fa:'خروس',tr:'xorus',en:'Rooster — خ sound',phs:['خـ','رو','س'],sc:[65,90,95]},
+    {fa:'غروب',tr:'qorub',en:'Sunset — غ sound',phs:['غـ','رو','ب'],sc:[60,92,88]},
+    {fa:'قرار',tr:'qarâr',en:'Agreement — ق sound',phs:['قـ','را','ر'],sc:[58,88,90]},
+    {fa:'آهنگ',tr:'âhang',en:'Music — آ sound',phs:['آ','هن','گ'],sc:[80,85,92]},
+  ],
+  vowels:[
+    {fa:'آب',tr:'âb',en:'Water — long â',phs:['آ','ب'],sc:[75,95]},
+    {fa:'شیر',tr:'shir',en:'Lion / Milk — long i',phs:['ش','یر'],sc:[82,90]},
+    {fa:'زود',tr:'zud',en:'Soon — long u',phs:['ز','ود'],sc:[78,85]},
+    {fa:'ماه',tr:'mâh',en:'Moon / Month — â',phs:['مـ','ا','ه'],sc:[85,88,90]},
+  ],
+};
+const PRON_TIPS = {
+  greetings: 'Farsi words are typically stressed on the final syllable. Focus on that last beat.',
+  difficult: 'The خ is a voiceless velar fricative — like "ch" in Scottish "loch". غ is its voiced twin, a soft gargle. ق is a deep uvular stop, further back than English "k".',
+  vowels: 'Persian has 3 long vowels (â, i, u) held roughly twice as long as the 3 short vowels (a, e, o). Length changes meaning.',
+};
+
+// ── Setup & keys ───────────────────────────────────────────────────
+function startApp() {
+  const ak = document.getElementById('k-anthropic').value.trim();
+  const az = document.getElementById('k-azure').value.trim();
+  const ar = document.getElementById('k-region').value.trim() || 'eastus';
+  if (ak) { ANTHROPIC_KEY = ak; localStorage.setItem('parsi_anthropic', ak); }
+  if (az) { AZURE_KEY = az; localStorage.setItem('parsi_azure', az); }
+  if (ar) { AZURE_REGION = ar; localStorage.setItem('parsi_region', ar); }
+  closeOverlay();
+}
+function skipSetup() { closeOverlay(); }
+function closeOverlay() {
+  document.getElementById('setup-overlay').style.display = 'none';
+  initApp();
+}
+
+function saveSettings() {
+  const ak = document.getElementById('s-anthropic').value.trim();
+  const az = document.getElementById('s-azure').value.trim();
+  const ar = document.getElementById('s-region').value.trim() || 'eastus';
+  if (ak) { ANTHROPIC_KEY = ak; localStorage.setItem('parsi_anthropic', ak); }
+  if (az) { AZURE_KEY = az; localStorage.setItem('parsi_azure', az); }
+  AZURE_REGION = ar; localStorage.setItem('parsi_region', ar);
+  const el = document.getElementById('settings-saved');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+  updateAzureNote();
+}
+
+function initApp() {
+  buildAllVocab();
+  buildLessonVocab();
+  updateLW();
+  updatePronWord();
+  updateAzureNote();
+  // Prefill settings fields
+  if (ANTHROPIC_KEY) document.getElementById('s-anthropic').value = ANTHROPIC_KEY;
+  if (AZURE_KEY) document.getElementById('s-azure').value = AZURE_KEY;
+  document.getElementById('s-region').value = AZURE_REGION;
+  // Welcome message
+  appendTutorMsg({
+    fa: 'سلام! من نازنین هستم.',
+    tr: 'salâm! man Nâzanin hastam.',
+    en: "Hi! I'm Nazanin, your live AI Farsi tutor. I respond in Farsi with transliterations and English explanations. Use the mic button to speak Farsi, or type in English or فارسی. What would you like to learn today?",
+    grammar: 'In Farsi, the verb هستم (hastam = I am) comes at the end — Farsi uses Subject-Object-Verb (SOV) word order.',
+  });
+  // Init Web Speech if available
+  initSpeechRecognition();
+}
+
+function updateAzureNote() {
+  const n = document.getElementById('azure-note');
+  if (!AZURE_KEY) n.classList.add('show');
+  else n.classList.remove('show');
+}
+
+// ── Navigation ─────────────────────────────────────────────────────
+function showSection(s) {
+  ['tutor','lessons','pronunc','vocab','settings'].forEach(x => {
+    document.getElementById('sect-'+x).classList.remove('active');
+    const n = document.getElementById('nav-'+x);
+    if (n) n.classList.remove('active');
+  });
+  document.getElementById('sect-'+s).classList.add('active');
+  const n = document.getElementById('nav-'+s);
+  if (n) n.classList.add('active');
+}
+
+// ── Chat tabs ──────────────────────────────────────────────────────
+function setChatTab(idx) {
+  [0,1].forEach(i => {
+    document.getElementById('ctab-'+i).classList.toggle('active', i===idx);
+    document.getElementById('csub-'+i).classList.toggle('active', i===idx);
+  });
+}
+
+// ── Anthropic API ──────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are Nazanin, a warm and expert Farsi (Persian) language tutor. You are encouraging, patient, and passionate about Persian culture and language.
+
+Respond ONLY with a valid JSON object (no markdown code fences, no extra text) with these fields:
+- "fa": your response written in Farsi script (required)
+- "tr": romanized transliteration using standard Persian romanization (required)
+- "en": English explanation, translation, or teaching content (required)
+- "grammar": one short grammar tip if a rule is demonstrated — in English, max 1 sentence (optional, omit if not relevant)
+
+Guidelines:
+- Keep Farsi natural and appropriate for a beginner/intermediate student
+- Correct mistakes gently by showing the correct form in Farsi
+- Include cultural context when it enriches understanding
+- The grammar field should name and explain one specific Farsi grammar rule visible in your response`;
+
+async function callClaude(userText) {
+  if (!ANTHROPIC_KEY) {
+    throw new Error('No Anthropic API key — add it in Settings.');
+  }
+  chatHistory.push({ role: 'user', content: userText });
+  const res = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: chatHistory,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    chatHistory.pop();
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  chatHistory.push({ role: 'assistant', content: raw });
+  try {
+    return JSON.parse(raw.replace(/```json|```/g, '').trim());
+  } catch {
+    return { fa: '', en: raw, tr: '' };
+  }
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  appendUserMsg(txt);
+  showTyping();
+  try {
+    const r = await callClaude(txt);
+    removeTyping();
+    appendTutorMsg(r);
+  } catch (e) {
+    removeTyping();
+    showErr(e.message);
+  }
+}
+
+function quickSend(txt) {
+  document.getElementById('chat-input').value = txt;
+  sendMsg();
+}
+
+// ── Chat rendering ─────────────────────────────────────────────────
+function appendUserMsg(text) {
+  const msgs = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="avatar user"><svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendTutorMsg(r) {
+  const msgs = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg tutor';
+  let inner = '';
+  if (r.fa) inner += `<span class="fa-line">${r.fa}</span>`;
+  if (r.en) inner += `<div>${escHtml(r.en)}</div>`;
+  if (r.tr) inner += `<div class="tr-line">${escHtml(r.tr)}</div>`;
+  if (r.grammar) {
+    inner += `<div class="grammar-pill"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${escHtml(r.grammar)}</div>`;
+    addGrammarNote(r.grammar);
+  }
+  d.innerHTML = `<div class="avatar tutor">ن</div><div class="bubble">${inner}</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg tutor'; d.id = 'typing-indicator';
+  d.innerHTML = `<div class="avatar tutor">ن</div><div class="dots-wrap"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
+
+function showErr(msg) {
+  const t = document.getElementById('err-toast');
+  document.getElementById('err-text').textContent = msg;
+  t.style.display = 'flex';
+  setTimeout(() => t.style.display = 'none', 6000);
+}
+
+function addGrammarNote(note) {
+  const list = document.getElementById('grammar-list');
+  // Remove empty placeholder
+  const empty = list.querySelector('.grammar-note-empty');
+  if (empty) empty.remove();
+  const d = document.createElement('div');
+  d.className = 'grammar-note-card';
+  d.textContent = note;
+  list.appendChild(d);
+}
+
+// ── Web Speech API ─────────────────────────────────────────────────
+const MIC_ERRORS = {
+  'not-allowed':    'Microphone access was denied. Click the 🔒 lock icon in your address bar → set Microphone to Allow, then refresh.',
+  'no-speech':      'No speech detected. Make sure your mic is working and try again.',
+  'audio-capture':  'No microphone found. Plug in a mic and try again.',
+  'network':        'Speech recognition needs an internet connection (Chrome sends audio to Google). Check your connection.',
+  'aborted':        'Listening was cancelled.',
+  'service-not-allowed': 'Speech recognition is blocked. Open this file via http://localhost instead of file://, or use Chrome/Edge.',
+  'bad-grammar':    'Speech grammar error. Try restarting.',
+  'language-not-supported': 'Farsi (fa-IR) is not supported in this browser. Use Chrome on Windows or Mac.',
+};
+
+function diagnoseMic() {
+  // Check 1: API exists
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    return 'Web Speech API is not supported in this browser. Please use Google Chrome or Microsoft Edge.';
+  }
+  // Check 2: file:// protocol blocks mic in most browsers
+  if (location.protocol === 'file:') {
+    return 'Running as a local file (file://) blocks microphone access in Chrome. Run a local server instead:\n\n  python3 -m http.server 8080\n\nThen open http://localhost:8080/parsi-farsi-app.html';
+  }
+  // Check 3: non-secure context
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    return 'Microphone requires a secure context (https:// or localhost). Your current URL is: ' + location.href;
+  }
+  return null; // all checks passed
+}
+
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  // Don't init if we know it'll fail
+  if (location.protocol === 'file:') return;
+
+  recognition = new SR();
+  recognition.lang = 'fa-IR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
+    // Show interim results in the input box as user speaks
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    document.getElementById('chat-input').value = final || interim;
+    if (final) {
+      stopMic();
+      setTimeout(sendMsg, 300);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    stopMic();
+    const friendly = MIC_ERRORS[e.error];
+    if (friendly) showMicError(friendly);
+    else if (e.error !== 'no-speech') showMicError('Mic error: ' + e.error);
+  };
+
+  recognition.onend = () => stopMic();
+}
+
+function showMicError(msg) {
+  // Show in the listening indicator area with full detail
+  const ind = document.getElementById('listen-indicator');
+  ind.style.color = 'var(--red)';
+  ind.style.background = 'var(--red-light)';
+  ind.style.padding = '6px 10px';
+  ind.style.borderRadius = 'var(--radius)';
+  ind.style.whiteSpace = 'pre-line';
+  ind.style.fontSize = '12px';
+  ind.style.textAlign = 'left';
+  ind.style.lineHeight = '1.5';
+  ind.textContent = '🎙 ' + msg;
+  ind.classList.add('show');
+  setTimeout(() => {
+    ind.classList.remove('show');
+    ind.style.cssText = '';
+  }, 8000);
+}
+
+function toggleMic() {
+  const problem = diagnoseMic();
+  if (problem) {
+    showMicError(problem);
+    return;
+  }
+  if (!recognition) {
+    showMicError('Speech recognition failed to initialise. Use Chrome or Edge.');
+    return;
+  }
+  if (micActive) stopMic();
+  else startMic();
+}
+
+function startMic() {
+  micActive = true;
+  try {
+    recognition.start();
+  } catch(e) {
+    micActive = false;
+    // Already started — stop and restart
+    if (e.name === 'InvalidStateError') {
+      try { recognition.stop(); } catch(_) {}
+      setTimeout(() => { micActive = true; recognition.start(); }, 200);
+      return;
+    }
+    showMicError('Could not start microphone: ' + e.message);
+    return;
+  }
+  document.getElementById('chat-mic').classList.add('on');
+  const ind = document.getElementById('listen-indicator');
+  ind.style.cssText = '';
+  ind.textContent = '🎙 Listening for Farsi... (speak now)';
+  ind.classList.add('show');
+}
+
+function stopMic() {
+  micActive = false;
+  try { recognition.stop(); } catch(e) {}
+  document.getElementById('chat-mic').classList.remove('on');
+  const ind = document.getElementById('listen-indicator');
+  ind.classList.remove('show');
+  ind.style.cssText = '';
+}
+
+// ── Azure Speech pronunciation scoring ────────────────────────────
+async function scoreWithAzure(audioBlob, referenceText) {
+  const assessmentConfig = {
+    ReferenceText: referenceText,
+    GradingSystem: 'HundredMark',
+    Granularity: 'Phoneme',
+    Dimension: 'Comprehensive',
+  };
+  const url = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=fa-IR&format=detailed`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': AZURE_KEY,
+      'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+      'Pronunciation-Assessment': btoa(unescape(encodeURIComponent(JSON.stringify(assessmentConfig)))),
+    },
+    body: audioBlob,
+  });
+  if (!res.ok) throw new Error(`Azure HTTP ${res.status}`);
+  return await res.json();
+}
+
+// ── Pronunciation drill ────────────────────────────────────────────
+function setPronMode(btn, mode) {
+  pronMode = mode; pronIdx = 0;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updatePronWord();
+}
+
+function updatePronWord() {
+  const w = PRON_SETS[pronMode][pronIdx];
+  document.getElementById('pron-fa').textContent = w.fa;
+  document.getElementById('pron-tr').textContent = w.tr;
+  document.getElementById('pron-en').textContent = w.en;
+  document.getElementById('pron-result').classList.remove('show');
+  const btn = document.getElementById('pron-rec-btn');
+  btn.classList.remove('on');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Record`;
+}
+
+function pronListen() {
+  // TTS via browser if available
+  if ('speechSynthesis' in window) {
+    const w = PRON_SETS[pronMode][pronIdx];
+    const utt = new SpeechSynthesisUtterance(w.fa);
+    utt.lang = 'fa-IR';
+    speechSynthesis.speak(utt);
+  }
+}
+
+function pronNext() {
+  const set = PRON_SETS[pronMode];
+  pronIdx = (pronIdx + 1) % set.length;
+  updatePronWord();
+}
+
+function togglePronRec() {
+  if (pronRec) return;
+  pronRec = true;
+  const btn = document.getElementById('pron-rec-btn');
+  btn.classList.add('on');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Recording...`;
+
+  if (AZURE_KEY) {
+    // Real recording with MediaRecorder → Azure
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunks, { type: 'audio/wav' });
+        pronRec = false;
+        btn.classList.remove('on');
+        btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Record`;
+        try {
+          const w = PRON_SETS[pronMode][pronIdx];
+          const result = await scoreWithAzure(blob, w.fa);
+          const pa = result.NBest?.[0]?.PronunciationAssessment;
+          if (pa) {
+            const words = result.NBest?.[0]?.Words || [];
+            const phonemeScores = words.flatMap(wd =>
+              (wd.Phonemes || []).map(ph => ({
+                ph: ph.Phoneme,
+                score: Math.round(ph.PronunciationAssessment?.AccuracyScore || 0),
+              }))
+            );
+            showPronResult(
+              Math.round(pa.AccuracyScore),
+              Math.round(pa.FluencyScore),
+              Math.round(pa.CompletenessScore),
+              phonemeScores.length ? phonemeScores : null,
+            );
+          }
+        } catch(e) {
+          showErr('Azure scoring failed: ' + e.message + '. Check your key and region in Settings.');
+          showPronResultSimulated();
+        }
+      };
+      mediaRecorder.start();
+      setTimeout(() => { if (mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }, 3000);
+    }).catch(e => {
+      pronRec = false;
+      btn.classList.remove('on');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Record`;
+      showErr('Mic access denied: ' + e.message);
+    });
+  } else {
+    // Simulated scoring
+    setTimeout(() => {
+      pronRec = false;
+      btn.classList.remove('on');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Record`;
+      showPronResultSimulated();
+    }, 2500);
+  }
+}
+
+function showPronResultSimulated() {
+  const w = PRON_SETS[pronMode][pronIdx];
+  const ov = Math.round(w.sc.reduce((a,b)=>a+b,0)/w.sc.length);
+  const phonemeData = w.phs.map((p, i) => ({ ph: p, score: w.sc[i] }));
+  showPronResult(ov, Math.min(99, ov+3), Math.max(60, ov-9), phonemeData);
+}
+
+function showPronResult(overall, accent, rhythm, phonemeData) {
+  document.getElementById('pr-ov').textContent = overall;
+  document.getElementById('pr-ac').textContent = accent;
+  document.getElementById('pr-ry').textContent = rhythm;
+  const row = document.getElementById('pron-phonemes');
+  if (phonemeData && phonemeData.length) {
+    row.innerHTML = phonemeData.map(p => {
+      const cls = p.score >= 85 ? 'g' : p.score >= 70 ? 'w' : 'e';
+      return `<div class="ph ${cls}">${escHtml(p.ph)}<span class="ph-sc">${p.score}%</span></div>`;
+    }).join('');
+  } else {
+    row.innerHTML = '';
+  }
+  document.getElementById('pron-tip').innerHTML = `<strong>Tip:</strong> ${PRON_TIPS[pronMode]}`;
+  document.getElementById('pron-result').classList.add('show');
+}
+
+// ── Lesson ─────────────────────────────────────────────────────────
+function openLesson() {
+  document.getElementById('lessons-curriculum').style.display = 'none';
+  document.getElementById('lesson-practice').classList.add('active');
+}
+function closeLesson() {
+  document.getElementById('lesson-practice').classList.remove('active');
+  document.getElementById('lessons-curriculum').style.display = 'flex';
+}
+
+function updateLW() {
+  const w = LESSON_WORDS[lwIdx];
+  document.getElementById('lw-fa').textContent = w.fa;
+  document.getElementById('lw-tr').textContent = w.tr;
+  document.getElementById('lw-en').textContent = w.en;
+  document.getElementById('lw-num').textContent = lwIdx + 1;
+  document.getElementById('lesson-fb').style.display = 'none';
+  const btn = document.getElementById('lrec-btn');
+  btn.classList.remove('on');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Pronounce`;
+}
+
+function lessonListen() {
+  if ('speechSynthesis' in window) {
+    const w = LESSON_WORDS[lwIdx];
+    const utt = new SpeechSynthesisUtterance(w.fa);
+    utt.lang = 'fa-IR';
+    speechSynthesis.speak(utt);
+  }
+}
+
+function toggleLRec() {
+  if (lrecActive) return;
+  lrecActive = true;
+  const btn = document.getElementById('lrec-btn');
+  btn.classList.add('on');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Recording...`;
+  setTimeout(() => {
+    lrecActive = false;
+    btn.classList.remove('on');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Pronounce`;
+    const scores = [72,78,85,88,91,94];
+    const pct = scores[lwIdx] || 80;
+    const fb = document.getElementById('lesson-fb');
+    fb.style.display = 'block';
+    fb.style.background = pct >= 85 ? '#E1F5EE' : pct >= 70 ? '#FAEEDA' : '#FCEBEB';
+    fb.style.color = pct >= 85 ? '#085041' : pct >= 70 ? '#633806' : '#791F1F';
+    fb.innerHTML = `<strong>${pct >= 85 ? 'Good pronunciation!' : pct >= 70 ? 'Getting there!' : 'Keep practicing!'}</strong> Accuracy: ${pct}%`;
+  }, 2200);
+}
+
+function lessonNext() {
+  lwIdx = (lwIdx + 1) % LESSON_WORDS.length;
+  updateLW();
+}
+
+// ── Vocabulary lists ───────────────────────────────────────────────
+function buildAllVocab() {
+  document.getElementById('all-vocab').innerHTML = VOCAB.map(v =>
+    `<div class="vocab-row"><div><div class="vocab-en">${escHtml(v.en)}</div><div class="vocab-tr">${escHtml(v.tr)}</div></div><div class="vocab-fa">${v.fa}</div></div>`
+  ).join('');
+}
+function buildLessonVocab() {
+  document.getElementById('lesson-vocab-list').innerHTML = LESSON_WORDS.map(v =>
+    `<div class="vocab-row"><div><div class="vocab-en">${escHtml(v.en)}</div><div class="vocab-tr">${escHtml(v.tr)}</div></div><div class="vocab-fa">${v.fa}</div></div>`
+  ).join('');
+}
+
+// ── Utility ────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Auto-init if keys already saved ───────────────────────────────
+if (ANTHROPIC_KEY) {
+  // Keys already saved — skip setup
+  document.getElementById('setup-overlay').style.display = 'none';
+  initApp();
+}
+</script>
+</body>
+</html>
